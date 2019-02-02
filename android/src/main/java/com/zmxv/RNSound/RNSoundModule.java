@@ -68,24 +68,24 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
     if (module.category != null) {
       Integer category = null;
       switch (module.category) {
-        case "Playback":
-          category = AudioManager.STREAM_MUSIC;
-          break;
-        case "Ambient":
-          category = AudioManager.STREAM_NOTIFICATION;
-          break;
-        case "System":
-          category = AudioManager.STREAM_SYSTEM;
-          break;
-        case "Voice":
-          category = AudioManager.STREAM_VOICE_CALL;
-          break;
-        case "Ring":
-          category = AudioManager.STREAM_RING;
-          break;
-        default:
-          Log.e("RNSoundModule", String.format("Unrecognised category %s", module.category));
-          break;
+      case "Playback":
+        category = AudioManager.STREAM_MUSIC;
+        break;
+      case "Ambient":
+        category = AudioManager.STREAM_NOTIFICATION;
+        break;
+      case "System":
+        category = AudioManager.STREAM_SYSTEM;
+        break;
+      case "Voice":
+        category = AudioManager.STREAM_VOICE_CALL;
+        break;
+      case "Ring":
+        category = AudioManager.STREAM_RING;
+        break;
+      default:
+        Log.e("RNSoundModule", String.format("Unrecognised category %s", module.category));
+        break;
       }
       if (category != null) {
         player.setAudioStreamType(category);
@@ -97,14 +97,15 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
 
       @Override
       public synchronized void onPrepared(MediaPlayer mp) {
-        if (callbackWasCalled) return;
+        if (callbackWasCalled)
+          return;
         callbackWasCalled = true;
 
         WritableMap props = Arguments.createMap();
         props.putDouble("duration", mp.getDuration() * .001);
         try {
           callback.invoke(NULL, props);
-        } catch(RuntimeException runtimeException) {
+        } catch (RuntimeException runtimeException) {
           // The callback was already invoked
           Log.e("RNSoundModule", "Exception", runtimeException);
         }
@@ -117,14 +118,15 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
 
       @Override
       public synchronized boolean onError(MediaPlayer mp, int what, int extra) {
-        if (callbackWasCalled) return true;
+        if (callbackWasCalled)
+          return true;
         callbackWasCalled = true;
         try {
           WritableMap props = Arguments.createMap();
           props.putInt("what", what);
           props.putInt("extra", extra);
           callback.invoke(props, NULL);
-        } catch(RuntimeException runtimeException) {
+        } catch (RuntimeException runtimeException) {
           // The callback was already invoked
           Log.e("RNSoundModule", "Exception", runtimeException);
         }
@@ -133,7 +135,7 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
     });
 
     try {
-      if(options.hasKey("loadSync") && options.getBoolean("loadSync")) {
+      if (options.hasKey("loadSync") && options.getBoolean("loadSync")) {
         player.prepare();
       } else {
         player.prepareAsync();
@@ -165,23 +167,23 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
       Log.i("RNSoundModule", fileName);
       try {
         mediaPlayer.setDataSource(fileName);
-      } catch(IOException e) {
+      } catch (IOException e) {
         Log.e("RNSoundModule", "Exception", e);
         return null;
       }
       return mediaPlayer;
     }
 
-    if (fileName.startsWith("asset:/")){
-        try {
-            AssetFileDescriptor descriptor = this.context.getAssets().openFd(fileName.replace("asset:/", ""));
-            mediaPlayer.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
-            descriptor.close();
-            return mediaPlayer;
-        } catch(IOException e) {
-            Log.e("RNSoundModule", "Exception", e);
-            return null;
-        }
+    if (fileName.startsWith("asset:/")) {
+      try {
+        AssetFileDescriptor descriptor = this.context.getAssets().openFd(fileName.replace("asset:/", ""));
+        mediaPlayer.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
+        descriptor.close();
+        return mediaPlayer;
+      } catch (IOException e) {
+        Log.e("RNSoundModule", "Exception", e);
+        return null;
+      }
     }
 
     File file = new File(fileName);
@@ -189,14 +191,14 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
       mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
       Log.i("RNSoundModule", fileName);
       try {
-          mediaPlayer.setDataSource(fileName);
-      } catch(IOException e) {
-          Log.e("RNSoundModule", "Exception", e);
-          return null;
+        mediaPlayer.setDataSource(fileName);
+      } catch (IOException e) {
+        Log.e("RNSoundModule", "Exception", e);
+        return null;
       }
       return mediaPlayer;
     }
-    
+
     return null;
   }
 
@@ -206,7 +208,7 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
     if (player == null) {
       setOnPlay(false, key);
       if (callback != null) {
-          callback.invoke(false);
+        callback.invoke(false);
       }
       return;
     }
@@ -230,12 +232,14 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
       public synchronized void onCompletion(MediaPlayer mp) {
         if (!mp.isLooping()) {
           setOnPlay(false, key);
-          if (callbackWasCalled) return;
+          if (callbackWasCalled)
+            return;
           callbackWasCalled = true;
           try {
             callback.invoke(true);
           } catch (Exception e) {
-              //Catches the exception: java.lang.RuntimeException·Illegal callback invocation from native module
+            // Catches the exception: java.lang.RuntimeException·Illegal callback invocation
+            // from native module
           }
         }
       }
@@ -246,12 +250,14 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
       @Override
       public synchronized boolean onError(MediaPlayer mp, int what, int extra) {
         setOnPlay(false, key);
-        if (callbackWasCalled) return true;
+        if (callbackWasCalled)
+          return true;
         callbackWasCalled = true;
         try {
           callback.invoke(true);
         } catch (Exception e) {
-          //Catches the exception: java.lang.RuntimeException·Illegal callback invocation from native module
+          // Catches the exception: java.lang.RuntimeException·Illegal callback invocation
+          // from native module
         }
         return true;
       }
@@ -312,6 +318,13 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
     }
   }
 
+  @Override
+  public void onCatalystInstanceDestroy() {
+    for (Map.Entry<String, String> entry : this.playerPool.entrySet()) {
+      release(entry.getKey());
+    }
+  }
+
   @ReactMethod
   public void setVolume(final Double key, final Float left, final Float right) {
     MediaPlayer player = this.playerPool.get(key);
@@ -325,7 +338,8 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
     try {
       AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
-      callback.invoke(NULL, (float) audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+      callback.invoke(NULL, (float) audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+          / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
     } catch (Exception error) {
       WritableMap e = Arguments.createMap();
       e.putInt("code", -1);
@@ -352,10 +366,10 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
 
   @ReactMethod
   public void setSpeed(final Double key, final Float speed) {
-	if (android.os.Build.VERSION.SDK_INT < 23) {
-	  Log.w("RNSoundModule", "setSpeed ignored due to sdk limit");
-	  return;
-	}
+    if (android.os.Build.VERSION.SDK_INT < 23) {
+      Log.w("RNSoundModule", "setSpeed ignored due to sdk limit");
+      return;
+    }
 
     MediaPlayer player = this.playerPool.get(key);
     if (player != null) {
@@ -367,7 +381,7 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
   public void setCurrentTime(final Double key, final Float sec) {
     MediaPlayer player = this.playerPool.get(key);
     if (player != null) {
-      player.seekTo((int)Math.round(sec * 1000));
+      player.seekTo((int) Math.round(sec * 1000));
     }
   }
 
@@ -381,16 +395,16 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
     callback.invoke(player.getCurrentPosition() * .001, player.isPlaying());
   }
 
-  //turn speaker on
+  // turn speaker on
   @ReactMethod
   public void setSpeakerphoneOn(final Double key, final Boolean speaker) {
     MediaPlayer player = this.playerPool.get(key);
     if (player != null) {
       player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-      AudioManager audioManager = (AudioManager)this.context.getSystemService(this.context.AUDIO_SERVICE);
-      if(speaker){
+      AudioManager audioManager = (AudioManager) this.context.getSystemService(this.context.AUDIO_SERVICE);
+      if (speaker) {
         audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-      }else{
+      } else {
         audioManager.setMode(AudioManager.MODE_NORMAL);
       }
       audioManager.setSpeakerphoneOn(speaker);
@@ -410,16 +424,16 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
 
       if (player != null) {
         if (focusChange <= 0) {
-            this.wasPlayingBeforeFocusChange = player.isPlaying();
+          this.wasPlayingBeforeFocusChange = player.isPlaying();
 
-            if (this.wasPlayingBeforeFocusChange) {
-              this.pause(this.focusedPlayerKey, null);
-            }
+          if (this.wasPlayingBeforeFocusChange) {
+            this.pause(this.focusedPlayerKey, null);
+          }
         } else {
-            if (this.wasPlayingBeforeFocusChange) {
-              this.play(this.focusedPlayerKey, null);
-              this.wasPlayingBeforeFocusChange = false;
-            }
+          if (this.wasPlayingBeforeFocusChange) {
+            this.play(this.focusedPlayerKey, null);
+            this.wasPlayingBeforeFocusChange = false;
+          }
         }
       }
     }
