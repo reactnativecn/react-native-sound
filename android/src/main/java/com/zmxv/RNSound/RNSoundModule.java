@@ -68,24 +68,24 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
     if (module.category != null) {
       Integer category = null;
       switch (module.category) {
-      case "Playback":
-        category = AudioManager.STREAM_MUSIC;
-        break;
-      case "Ambient":
-        category = AudioManager.STREAM_NOTIFICATION;
-        break;
-      case "System":
-        category = AudioManager.STREAM_SYSTEM;
-        break;
-      case "Voice":
-        category = AudioManager.STREAM_VOICE_CALL;
-        break;
-      case "Ring":
-        category = AudioManager.STREAM_RING;
-        break;
-      default:
-        Log.e("RNSoundModule", String.format("Unrecognised category %s", module.category));
-        break;
+        case "Playback":
+          category = AudioManager.STREAM_MUSIC;
+          break;
+        case "Ambient":
+          category = AudioManager.STREAM_NOTIFICATION;
+          break;
+        case "System":
+          category = AudioManager.STREAM_SYSTEM;
+          break;
+        case "Voice":
+          category = AudioManager.STREAM_VOICE_CALL;
+          break;
+        case "Ring":
+          category = AudioManager.STREAM_RING;
+          break;
+        default:
+          Log.e("RNSoundModule", String.format("Unrecognised category %s", module.category));
+          break;
       }
       if (category != null) {
         player.setAudioStreamType(category);
@@ -131,6 +131,27 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
           Log.e("RNSoundModule", "Exception", runtimeException);
         }
         return true;
+      }
+    });
+
+
+    player.setOnCompletionListener(new OnCompletionListener() {
+      boolean callbackWasCalled = false;
+
+      @Override
+      public synchronized void onCompletion(MediaPlayer mp) {
+        if (!mp.isLooping()) {
+          setOnPlay(false, key);
+          if (callbackWasCalled)
+            return;
+          callbackWasCalled = true;
+          try {
+            callback.invoke(true);
+          } catch (Exception e) {
+            // Catches the exception: java.lang.RuntimeException·Illegal callback invocation
+            // from native module
+          }
+        }
       }
     });
 
@@ -225,43 +246,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
       this.focusedPlayerKey = key;
     }
 
-    player.setOnCompletionListener(new OnCompletionListener() {
-      boolean callbackWasCalled = false;
-
-      @Override
-      public synchronized void onCompletion(MediaPlayer mp) {
-        if (!mp.isLooping()) {
-          setOnPlay(false, key);
-          if (callbackWasCalled)
-            return;
-          callbackWasCalled = true;
-          try {
-            callback.invoke(true);
-          } catch (Exception e) {
-            // Catches the exception: java.lang.RuntimeException·Illegal callback invocation
-            // from native module
-          }
-        }
-      }
-    });
-    player.setOnErrorListener(new OnErrorListener() {
-      boolean callbackWasCalled = false;
-
-      @Override
-      public synchronized boolean onError(MediaPlayer mp, int what, int extra) {
-        setOnPlay(false, key);
-        if (callbackWasCalled)
-          return true;
-        callbackWasCalled = true;
-        try {
-          callback.invoke(true);
-        } catch (Exception e) {
-          // Catches the exception: java.lang.RuntimeException·Illegal callback invocation
-          // from native module
-        }
-        return true;
-      }
-    });
     player.start();
     setOnPlay(true, key);
   }
@@ -307,6 +291,7 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
   public void release(final Double key) {
     MediaPlayer player = this.playerPool.get(key);
     if (player != null) {
+      player.reset();
       player.release();
       this.playerPool.remove(key);
 
@@ -339,7 +324,7 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
       AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
       callback.invoke(NULL, (float) audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-          / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+              / audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
     } catch (Exception error) {
       WritableMap e = Arguments.createMap();
       e.putInt("code", -1);
@@ -437,11 +422,6 @@ public class RNSoundModule extends ReactContextBaseJavaModule implements AudioMa
         }
       }
     }
-  }
-
-  @ReactMethod
-  public void enable(final Boolean enabled) {
-    // no op
   }
 
   @Override
