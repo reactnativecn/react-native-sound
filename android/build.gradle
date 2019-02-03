@@ -1,55 +1,24 @@
-def safeExtGet(prop, fallback) {
-    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
-}
-
-buildscript {
-    repositories {
-        jcenter()
-        google()
-        maven {
-            url 'https://maven.google.com/'
-            name 'Google'
-        }
-    }
-
-    dependencies {
-        //noinspection GradleDependency
-        classpath 'com.android.tools.build:gradle:3.2.1'
-    }
-}
-
 apply plugin: 'com.android.library'
 
+def DEFAULT_COMPILE_SDK_VERSION             = 26
+def DEFAULT_BUILD_TOOLS_VERSION             = "26.0.2"
+def DEFAULT_TARGET_SDK_VERSION              = 26
+
 android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 27)
-    //noinspection GradleDependency
-    buildToolsVersion safeExtGet('buildToolsVersion', '27.0.3')
+    compileSdkVersion rootProject.hasProperty('compileSdkVersion') ? rootProject.compileSdkVersion : DEFAULT_COMPILE_SDK_VERSION
+    buildToolsVersion rootProject.hasProperty('buildToolsVersion') ? rootProject.buildToolsVersion : DEFAULT_BUILD_TOOLS_VERSION
 
-    defaultConfig {
-        minSdkVersion safeExtGet('minSdkVersion', 16)
-        //noinspection OldTargetApi
-        targetSdkVersion safeExtGet('targetSdkVersion', 27)
+  defaultConfig {
+    minSdkVersion 16
+    targetSdkVersion rootProject.hasProperty('targetSdkVersion') ? rootProject.targetSdkVersion : DEFAULT_TARGET_SDK_VERSION
+    versionCode 1
+    versionName "1.0"
+    ndk {
+      abiFilters "armeabi-v7a", "x86"
     }
-    lintOptions {
-        abortOnError false
-    }
-}
-
-repositories {
-    mavenLocal()
-    jcenter()
-    google()
-    maven {
-        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-        url "$projectDir/../../../node_modules/react-native/android"
-    }
-    maven {
-        url 'https://maven.google.com/'
-        name 'Google'
-    }
+  }
 }
 
 dependencies {
-    //noinspection GradleDynamicVersion
-    implementation 'com.facebook.react:react-native:+'
+  compileOnly 'com.facebook.react:react-native:+'
 }

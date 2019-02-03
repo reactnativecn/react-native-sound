@@ -164,7 +164,7 @@ Sound.prototype.setVolume = function(value) {
 };
 
 Sound.prototype.getSystemVolume = function(callback) {
-  if(IsAndroid) {
+  if(!IsWindows) {
     RNSound.getSystemVolume(callback);
   }
   return this;
@@ -273,6 +273,12 @@ Sound.setMode = function(value) {
     RNSound.setMode(value);
   }
 };
+
+Sound.setSpeakerPhone = function(value) {
+  if (!IsAndroid && !IsWindows) {
+    RNSound.setSpeakerPhone(value)
+  }
+}
 
 Sound.MAIN_BUNDLE = RNSound.MainBundlePath;
 Sound.DOCUMENT = RNSound.NSDocumentDirectory;
